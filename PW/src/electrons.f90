@@ -88,6 +88,9 @@ SUBROUTINE electrons()
      printout = 2  ! print etot and energy components at each scf step
   END IF
   IF (dft_is_hybrid() .AND. adapt_thr ) tr2= tr2_init
+! JBH : Modify
+  OPEN ( unit=192, file="exx.dat" )
+! JBH
   fock0 = 0.D0
   fock1 = 0.D0
   IF (.NOT. exx_is_active () ) fock2 = 0.D0
@@ -1282,9 +1285,13 @@ FUNCTION exxenergyace ( )
   ! ... Compute exchange energy using ACE
   !
   USE kinds,    ONLY : DP
+! JBH : Modify
+  USE io_global,            ONLY : stdout
+  USE cell_base,            ONLY : at
+! JBH : Modify
   USE buffers,  ONLY : get_buffer
   USE exx,      ONLY : vexxace_gamma, vexxace_k, domat
-  USE klist,    ONLY : nks, ngk
+  USE klist,    ONLY : nks, ngk, xk
   USE wvfct,    ONLY : nbnd, npwx, current_k
   USE lsda_mod, ONLY : lsda, isk, current_spin
   USE io_files, ONLY : iunwfc, nwordwfc
@@ -1299,7 +1306,8 @@ FUNCTION exxenergyace ( )
   REAL (dp) :: exxenergyace  ! computed energy
   !
   REAL (dp) :: ex
-  INTEGER :: ik, npw
+  REAL (dp) :: k_temp(3)
+  INTEGER :: ik, npw, ii
   !
   domat = .true.
   exxenergyace=0.0_dp
@@ -1311,7 +1319,15 @@ FUNCTION exxenergyace ( )
      IF (gamma_only) THEN
         call vexxace_gamma ( npw, nbnd, evc, ex )
      ELSE
+! JBH : Modify
+        k_temp = xk(1:3,current_k)
+        call cryst_to_cart(1, k_temp, at, -1)
+        WRITE( 192, '(3(F17.8),I6,I6)') (k_temp(ii), ii=1,3), nbnd, 0 
+        !WRITE( 192, '(3(F17.8)),2(I6)') (xk(ii,current_k), ii=1,3), nbnd, 0
+        !WRITE( 192, '(F9.8, 2(IF17.8))') (xk(ik, 1)
         call vexxace_k ( npw, nbnd, evc, ex )
+        !WRITE( 192, '("Total exchange energy", F17.8)') ex
+! JBH : End modify
      END IF
      exxenergyace = exxenergyace + ex
   END DO

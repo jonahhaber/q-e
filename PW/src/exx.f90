@@ -5534,7 +5534,7 @@ END SUBROUTINE aceupdate_k
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 SUBROUTINE vexxace_k(nnpw,nbnd,phi,exxe,vphi)
 USE becmod,               ONLY : calbec
-USE wvfct,                ONLY : current_k, npwx
+USE wvfct,                ONLY : current_k, npwx, wg
 USE noncollin_module,     ONLY : npol
 !
 ! do the ACE potential and
@@ -5542,7 +5542,7 @@ USE noncollin_module,     ONLY : npol
 !
 IMPLICIT NONE
   real(DP) :: exxe
-  INTEGER :: nnpw,nbnd,i
+  INTEGER :: nnpw,nbnd,i,j
   COMPLEX(DP) :: phi(npwx*npol,nbnd)
   COMPLEX(DP),OPTIONAL :: vphi(npwx*npol,nbnd)
   COMPLEX(DP),ALLOCATABLE :: cmexx(:,:), vv(:,:)
@@ -5567,7 +5567,15 @@ IMPLICIT NONE
   CALL ZGEMM ('N','N',npwx*npol,nbnd,nbndproj,-(One,Zero),xi(1,1,current_k),npwx*npol,cmexx,nbndproj,(One,Zero),vv,npwx*npol)
 
   IF(domat) THEN
+! JBH : Modify
+     WRITE(stdout, *) 'about to enter matcalc_k'
      CALL matcalc_k('ACE',.true.,0,current_k,npwx*npol,nbnd,nbnd,phi,vv,cmexx,exxe)
+     DO j = 1,nbnd
+         !WRITE(192, '("nbnd: ", I6)') j
+         !WRITE(192, '("exchange_energy: ",F17.8)') DBLE(cmexx(j,j))
+         WRITE( 192, '(I6, I6, F17.8, F17.8)') 1, j, DBLE(cmexx(j,j)) * 13.6056980659, 0.0 
+     ENDDO
+! JBH : Modify
 #if defined(__DEBUG)
     WRITE(stdout,'(3(A,I3),A,I9,A,f12.6)') 'vexxace_k: nbnd=', nbnd, ' nbndproj=',nbndproj, &
                    ' k=',current_k,' npw=',nnpw, ' Ex(k)=',exxe
