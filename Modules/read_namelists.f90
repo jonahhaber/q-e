@@ -416,6 +416,9 @@ MODULE read_namelists_module
        occupation_constraints = .false.
        !
        adaptive_thr   =  .false.
+! Debug Zhenfei Liu 10/22/2015
+       perturb_hyb = 0
+! Debug DONE.
        conv_thr_init  =  0.1E-2_DP
        conv_thr_multi =  0.1_DP
        !
@@ -800,6 +803,9 @@ MODULE read_namelists_module
 
        ! ... EXX
 
+! Debug Zhenfei Liu 09/21/2015
+       CALL mp_bcast( rsh_beta,          ionode_id, intra_image_comm )
+! DONE Debug.
        CALL mp_bcast( ace,                 ionode_id, intra_image_comm )
        CALL mp_bcast( localization_thr,    ionode_id, intra_image_comm )
        CALL mp_bcast( scdm,                ionode_id, intra_image_comm )
@@ -1020,6 +1026,9 @@ MODULE read_namelists_module
        ! ... real space ...
        CALL mp_bcast( real_space,         ionode_id, intra_image_comm )
        CALL mp_bcast( adaptive_thr,       ionode_id, intra_image_comm )
+! Debug Zhenfei Liu 10/22/2015
+       CALL mp_bcast( perturb_hyb,        ionode_id, intra_image_comm )
+! Debug DONE.
        CALL mp_bcast( conv_thr_init,      ionode_id, intra_image_comm )
        CALL mp_bcast( conv_thr_multi,     ionode_id, intra_image_comm )
        !

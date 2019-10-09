@@ -43,7 +43,10 @@ SUBROUTINE electrons()
   USE exx,                  ONLY : aceinit,exxinit, exxenergy2, exxenergy, exxbuff, &
                                    fock0, fock1, fock2, dexx, use_ace, local_thr
   USE funct,                ONLY : dft_is_hybrid, exx_is_active
-  USE control_flags,        ONLY : adapt_thr, tr2_init, tr2_multi, gamma_only
+! Debug Zhenfei Liu 10/21/2015
+!  USE control_flags,        ONLY : adapt_thr, tr2_init, tr2_multi
+  USE control_flags,        ONLY : adapt_thr, tr2_init, tr2_multi, pert_hyb
+! Debug DONE.
   !
   USE paw_variables,        ONLY : okpaw, ddd_paw, total_core_energy, only_paw
   USE paw_onecenter,        ONLY : PAW_potential
@@ -56,6 +59,9 @@ SUBROUTINE electrons()
   !
   ! ... a few local variables
   !
+! Debug Zhenfei Liu 10/20/2015
+  REAL(DP), EXTERNAL :: get_clock
+! Debug DONE.
   REAL(DP) :: &
       charge,       &! the total charge
       ee, exxen      ! used to compute exchange energy
@@ -80,8 +86,8 @@ SUBROUTINE electrons()
   first = .true.
   tr2_final = tr2
   IF ( dft_is_hybrid() ) THEN
-     !printout = 0  ! do not print etot and energy components at each scf step
-     printout = 1  ! print etot, not energy components at each scf step
+     printout = 1  ! do not print etot and energy components at each scf step
+! Debug Zhenfei Liu: changed above to from 0 to 1 - even if hybrid, print etot
   ELSE IF ( lmd ) THEN
      printout = 1  ! print etot, not energy components at each scf step
   ELSE
@@ -251,9 +257,16 @@ SUBROUTINE electrons()
         exxen = 0.5D0*fock2 
         !
         IF ( dexx < tr2_final ) THEN
-           WRITE( stdout, 9066 ) '!!', etot, hwf_energy
+! Debug Zhenfei Liu 10/21/2015
+! change the final output from ! to %. this is because we changed
+! printout from 0 to 1, to avoid confusion with the ! printout from
+! regular electron_scf without hyb
+!           WRITE( stdout, 9066 ) '!', etot, hwf_energy, dexx
+           WRITE( stdout, 9066 ) '%', etot, hwf_energy, dexx
         ELSE
-           WRITE( stdout, 9066 ) '  ', etot, hwf_energy
+!           WRITE( stdout, 9066 ) ' ', etot, hwf_energy, dexx
+           WRITE( stdout, 9066 ) '~', etot, hwf_energy, dexx
+! Debug DONE.
         END IF
         IF ( dexx>1.d-8 ) THEN
           WRITE( stdout, 9067 ) dexx
@@ -273,6 +286,12 @@ SUBROUTINE electrons()
            WRITE( stdout, 9101 )
            RETURN
         END IF
+! Debug Zhenfei Liu 10/21/2015
+        IF ( pert_hyb>0 .AND. iter>pert_hyb ) THEN
+           WRITE( stdout, 9102 ) 
+           RETURN
+        END IF
+! Debug DONE.
         !
         IF ( adapt_thr ) THEN
            tr2 = MAX(tr2_multi * dexx, tr2_final)
@@ -313,6 +332,9 @@ SUBROUTINE electrons()
 9067 FORMAT('     est. exchange err (dexx)  =',0PF17.8,' Ry' )
 9068 FORMAT('     est. exchange err (dexx)  =',1PE17.1,' Ry' )
 9101 FORMAT(/'     EXX self-consistency reached' )
+! Debug Zhenfei Liu 10/21/2015
+9102 FORMAT(/'     Perturbative EXX stopped' )
+! Debug DONE.
 9120 FORMAT(/'     EXX convergence NOT achieved after ',i3,' iterations: stopping' )
 9121 FORMAT(/'     scf convergence threshold =',1PE17.1,' Ry' )
   !

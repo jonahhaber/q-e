@@ -22,8 +22,13 @@ SUBROUTINE iosys()
   USE kinds,         ONLY : DP
   USE funct,         ONLY : dft_is_hybrid, dft_has_finite_size_correction, &
                             set_finite_size_volume, get_inlc, get_dft_short
-  USE funct,         ONLY: set_exx_fraction, set_screening_parameter
-  USE control_flags, ONLY: adapt_thr, tr2_init, tr2_multi
+! Debug Zhenfei Liu 9/22/2015, and 10/21/2015
+!  USE funct,         ONLY: set_exx_fraction, set_screening_parameter
+  USE funct,         ONLY: set_exx_fraction, set_screening_parameter, &
+                           set_rsh_beta
+!  USE control_flags, ONLY: adapt_thr, tr2_init, tr2_multi
+  USE control_flags, ONLY: adapt_thr, tr2_init, tr2_multi, pert_hyb
+! DONE Debug.
   USE constants,     ONLY : autoev, eV_to_kelvin, pi, rytoev, &
                             ry_kbar, amu_ry, bohr_radius_angs, eps8
   USE mp_pools,      ONLY : npool
@@ -238,6 +243,9 @@ SUBROUTINE iosys()
                                lda_plus_U_kind, Hubbard_U, Hubbard_J,       &
                                Hubbard_J0, Hubbard_beta,                    &
                                Hubbard_alpha, input_dft, la2F,              &
+! Debug Zhenfei Liu 09/22/2015
+                               rsh_beta,                                    &
+! DONE Debug.
                                starting_ns_eigenvalue, U_projection_type,   &
                                x_gamma_extrapolation, nqx1, nqx2, nqx3,     &
                                exxdiv_treatment, yukawa, ecutvcut,          &
@@ -272,7 +280,11 @@ SUBROUTINE iosys()
                                diago_david_ndim, diagonalization,          &
                                diago_full_acc, startingwfc, startingpot,   &
                                real_space, scf_must_converge
-  USE input_parameters, ONLY : adaptive_thr, conv_thr_init, conv_thr_multi
+! Debug Zhenfei Liu 10/21/2015
+!  USE input_parameters, ONLY : adaptive_thr, conv_thr_init, conv_thr_multi
+  USE input_parameters, ONLY : adaptive_thr, conv_thr_init, conv_thr_multi,&
+                               perturb_hyb
+! Debug DONE.
   !
   ! ... IONS namelist
   !
@@ -960,6 +972,9 @@ SUBROUTINE iosys()
   tr2   = conv_thr
   niter = electron_maxstep
   adapt_thr = adaptive_thr
+! Debug Zhenfei Liu 10/21/2015
+  pert_hyb = perturb_hyb
+! Debug DONE.
   tr2_init  = conv_thr_init
   tr2_multi = conv_thr_multi
   !
@@ -1604,9 +1619,16 @@ SUBROUTINE iosys()
   ! ... must be done AFTER dft is read from PP files and initialized
   ! ... or else the two following parameters will be overwritten
   !
-  IF (exx_fraction >= 0.0_DP) CALL set_exx_fraction (exx_fraction)
-  IF (screening_parameter >= 0.0_DP) &
-        & CALL set_screening_parameter (screening_parameter)
+
+! Debug Zhenfei Liu 9/29/2015 
+!  IF (exx_fraction >= 0.0_DP) CALL set_exx_fraction (exx_fraction)
+         CALL set_exx_fraction (exx_fraction)
+!  IF (screening_parameter >= 0.0_DP) &
+!        & CALL set_screening_parameter (screening_parameter)
+         CALL set_screening_parameter (screening_parameter)
+!  IF (rsh_beta /= 0.0_DP) &
+         CALL set_rsh_beta (rsh_beta)
+! DONE Debug.
   !
   ! ... read the vdw kernel table if needed
   !

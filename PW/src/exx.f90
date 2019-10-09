@@ -118,6 +118,9 @@ MODULE exx
   ! erfc screening
   REAL(DP)          :: erfc_scrlen = 0._dp
   !
+! Debug Zhenfei Liu 9/25/2015
+  REAL(DP)          :: beta_in_rsh = 0._dp
+! DONE Debug.
   ! erf screening
   REAL(DP)          :: erf_scrlen = 0._dp
   !
@@ -666,7 +669,8 @@ MODULE exx
     !------------------------------------------------------------------------
     !
     USE cell_base,  ONLY : at, alat
-    USE funct,      ONLY : get_screening_parameter
+    USE funct,      ONLY : get_screening_parameter, get_rsh_beta
+! Debug Zhenfei Liu 9/26/2015, added get_rsh_beta above
     !
     IMPLICIT NONE
     !
@@ -794,15 +798,23 @@ MODULE exx
      !------------------------------------------------------------------------
      !This SUBROUTINE is called when restarting an exx calculation
      USE funct,                ONLY : get_exx_fraction, start_exx, &
-                                      exx_is_active, get_screening_parameter
-
+! Debug Zhenfei Liu 9/25/2015
+!                                      exx_is_active, get_screening_parameter
+                                      exx_is_active, get_screening_parameter, &
+                                      get_rsh_beta
+! DONE Debug.
      IMPLICIT NONE
      LOGICAL, INTENT(in) :: set_ace
      !
      use_ace = set_ace
      erfc_scrlen = get_screening_parameter()
-     exxdiv = exx_divergence()
+! Debug Zhenfei Liu 9/25/2015
+     beta_in_rsh = get_rsh_beta()
+! DONE Debug.
      exxalfa = get_exx_fraction()
+     exxdiv = exx_divergence()
+! Debug Zhenfei Liu 10/8/2015 - I think it's important to get exxalfa
+! first, then execute the divergence. This is important as explicitly tested.
      CALL start_exx()
      CALL weights()
      IF(local_thr.gt.0.0d0) Call errore('exx_restart','SCDM with restart NYI',1)
@@ -838,7 +850,8 @@ MODULE exx
                                      iexx_start, iexx_end
     USE mp,                   ONLY : mp_sum, mp_bcast
     USE funct,                ONLY : get_exx_fraction, start_exx,exx_is_active,&
-                                     get_screening_parameter, get_gau_parameter
+                                     get_screening_parameter, get_gau_parameter, get_rsh_beta
+! Debug Zhenfei Liu 9/25/2015, added get_rsh_beta above
     USE scatter_mod,          ONLY : gather_grid, scatter_grid
     USE fft_interfaces,       ONLY : invfft
     USE uspp,                 ONLY : nkb, vkb, okvan
@@ -918,9 +931,14 @@ MODULE exx
     IF (.not.exx_is_active()) THEN
        !
        erfc_scrlen = get_screening_parameter()
+! Debug Zhenfei Liu 9/25/2015
+       beta_in_rsh = get_rsh_beta()
+! DONE Debug.
        gau_scrlen = get_gau_parameter()
-       exxdiv  = exx_divergence()
        exxalfa = get_exx_fraction()
+       exxdiv  = exx_divergence()
+! Debug Zhenfei Liu 10/8/2015 - I think it is important to get exxalfa
+! first, then execute the divergence. This is important as explicitly tested.
        !
        CALL start_exx()
     ENDIF
@@ -1726,7 +1744,10 @@ MODULE exx
        CALL fwfft( 'CustomWave' , result(:,ii), exx_fft%dfftt )
        !communicate result
        DO ig = 1, n
-          big_result(ig,ibnd) = big_result(ig,ibnd) - exxalfa*result(exx_fft%nlt(igk_exx(ig,current_k)),ii)
+          !big_result(ig,ibnd) = big_result(ig,ibnd) - exxalfa*result(exx_fft%nlt(igk_exx(ig,current_k)),ii)
+! Start JBH 9/11/2018
+          big_result(ig,ibnd) = big_result(ig,ibnd) - result(exx_fft%nlt(igk_exx(ig,current_k)),ii)
+! End H 9/11/2018
        END DO
        !
        ! add non-local \sum_I |beta_I> \alpha_Ii (the sum on i is outside)
@@ -2159,14 +2180,21 @@ MODULE exx
           CALL fwfft ('CustomWave', result_nc(:,1,ii), exx_fft%dfftt)
           CALL fwfft ('CustomWave', result_nc(:,2,ii), exx_fft%dfftt)
           DO ig = 1, n
-             big_result(ig,ibnd) = big_result(ig,ibnd) - exxalfa*result_nc(exx_fft%nlt(igk_exx(ig,current_k)),1,ii)
-             big_result(n+ig,ibnd) = big_result(n+ig,ibnd) - exxalfa*result_nc(exx_fft%nlt(igk_exx(ig,current_k)),2,ii)
+! Start JBH 9/11/2018
+             !big_result(ig,ibnd) = big_result(ig,ibnd) - exxalfa*result_nc(exx_fft%nlt(igk_exx(ig,current_k)),1,ii)
+             big_result(ig,ibnd) = big_result(ig,ibnd) - result_nc(exx_fft%nlt(igk_exx(ig,current_k)),1,ii)
+             !big_result(n+ig,ibnd) = big_result(n+ig,ibnd) - exxalfa*result_nc(exx_fft%nlt(igk_exx(ig,current_k)),2,ii)
+             big_result(n+ig,ibnd) = big_result(n+ig,ibnd) - result_nc(exx_fft%nlt(igk_exx(ig,current_k)),2,ii)
+! End JBH 9/11/2018
           ENDDO
        ELSE
           !
           CALL fwfft ('CustomWave', result(:,ii), exx_fft%dfftt)
           DO ig = 1, n
-             big_result(ig,ibnd) = big_result(ig,ibnd) - exxalfa*result(exx_fft%nlt(igk_exx(ig,current_k)),ii)
+! Debug Zhenfei Liu 9/26/2015
+!             big_result(ig,ibnd) = big_result(ig,ibnd) - exxalfa*result(exx_fft%nlt(igk_exx(ig,current_k)),ii)
+             big_result(ig,ibnd) = big_result(ig,ibnd) - result(exx_fft%nlt(igk_exx(ig,current_k)),ii)
+! DONE Debug.
           ENDDO
        ENDIF
        !
@@ -2353,13 +2381,18 @@ MODULE exx
          !
       ELSEIF (qq > eps_qdiv) THEN
          !
-         IF ( erfc_scrlen > 0  ) THEN
-            fac(ig)=e2*fpi/qq*(1._DP-exp(-qq/4._DP/erfc_scrlen**2)) * grid_factor_track(ig)
-         ELSEIF( erf_scrlen > 0 ) THEN
-            fac(ig)=e2*fpi/qq*(exp(-qq/4._DP/erf_scrlen**2)) * grid_factor_track(ig)
-         ELSE
-            fac(ig)=e2*fpi/( qq + yukawa ) * grid_factor_track(ig) ! as HARTREE
-         ENDIF
+! Debug Zhenfei Liu 9/26/2015
+! this equals: (alpha+beta)*1 - beta*(1-[])
+        fac(ig)= e2*fpi/qq * grid_factor_track(ig) &
+                  *(exxalfa + beta_in_rsh * EXP(-qq/4._DP/erfc_scrlen**2))  
+!         IF ( erfc_scrlen > 0  ) THEN
+!            fac(ig)=e2*fpi/qq*(1._DP-exp(-qq/4._DP/erfc_scrlen**2)) * grid_factor_track(ig)
+!         ELSEIF( erf_scrlen > 0 ) THEN
+!            fac(ig)=e2*fpi/qq*(exp(-qq/4._DP/erf_scrlen**2)) * grid_factor_track(ig)
+!         ELSE
+!            fac(ig)=e2*fpi/( qq + yukawa ) * grid_factor_track(ig) ! as HARTREE
+!         ENDIF
+! DONE Debug.
          !
       ELSE
          !
@@ -2367,6 +2400,7 @@ MODULE exx
          !
          IF ( yukawa > 0._DP.and. .not. x_gamma_extrapolation ) fac(ig) = fac(ig) + e2*fpi/( qq + yukawa )
          IF( erfc_scrlen > 0._DP.and. .not. x_gamma_extrapolation ) fac(ig) = fac(ig) + e2*pi/(erfc_scrlen**2)
+! Debug Zhenfei Liu: 9/26/2015 will enforce x_gamma_extrapolation (default)
          !
       ENDIF
       !
@@ -2769,7 +2803,10 @@ MODULE exx
 !$omp end parallel do
                    !
                    vc = vc * omega * 0.25_DP / nqs
-                   energy = energy - exxalfa * vc * wg(jbnd,ikk)
+! Debug Zhenfei Liu 9/26/2015
+!                   energy = energy - exxalfa * vc * wg(jbnd,ikk)
+                energy = energy - vc * wg(jbnd,ikk)
+! DONE Debug.
                    !
                    IF(okpaw) THEN
                       IF(ibnd>=ibnd_start) &
@@ -3086,8 +3123,10 @@ MODULE exx
                           conjg(rhoc(exx_fft%nlt(ig),ibnd-ibnd_inner_start+1)))
                    ENDDO
                    vc = vc * omega * x_occupation(ibnd,ik) / nqs
+! Debug Zhenfei Liu 9/26/2015
+!                energy = energy - exxalfa * vc * wg(jbnd,ikk)
                    energy = energy - exxalfa * vc * wg(jbnd,ikk)
-                   
+! DONE Debug.
                    IF(okpaw) THEN
                       energy = energy +exxalfa*x_occupation(ibnd,ik)/nqs*wg(jbnd,ikk) &
                            *PAW_xx_energy(becxx(ikq)%k(:,ibnd), becpsi%k(:,jbnd))
@@ -3189,17 +3228,24 @@ MODULE exx
                  ENDIF
                  IF (.not.on_double_grid) THEN
                     IF ( qq > 1.d-8 ) THEN
-                       IF ( erfc_scrlen > 0 ) THEN
+! Debug Zhenfei Liu 9/27/2015
+! this equals: (alpha+beta)*1 - beta*(1-exp[])
                           div = div + exp( -alpha * qq) / qq * &
-                                (1._dp-exp(-qq*tpiba2/4.d0/erfc_scrlen**2)) * grid_factor
-                       ELSEIF ( erf_scrlen >0 ) THEN
-                          div = div + exp( -alpha * qq) / qq * &
-                                (exp(-qq*tpiba2/4.d0/erf_scrlen**2)) * grid_factor
-                       ELSE
-
-                          div = div + exp( -alpha * qq) / (qq + yukawa/tpiba2) &
-                                                     * grid_factor
-                       ENDIF
+                                ( exxalfa + beta_in_rsh * &
+                                     exp(-qq*tpiba2/4.d0/erfc_scrlen**2) ) * &
+                                grid_factor
+!                       IF ( erfc_scrlen > 0 ) THEN
+!                          div = div + exp( -alpha * qq) / qq * &
+!                                (1._dp-exp(-qq*tpiba2/4.d0/erfc_scrlen**2)) * grid_factor
+!                       ELSEIF ( erf_scrlen >0 ) THEN
+!                          div = div + exp( -alpha * qq) / qq * &
+!                                (exp(-qq*tpiba2/4.d0/erf_scrlen**2)) * grid_factor
+!                       ELSE
+!
+!                          div = div + exp( -alpha * qq) / (qq + yukawa/tpiba2) &
+!                                                     * grid_factor
+!                       ENDIF
+! DONE Debug.
                     ENDIF
                  ENDIF
               ENDDO
@@ -3210,6 +3256,7 @@ MODULE exx
      IF (gamma_only) THEN
         div = 2.d0 * div
      ENDIF
+! Debug Zhenfei Liu 09/26/2015: will enforce x_gamma_extrapolation (default)
      IF ( .not. x_gamma_extrapolation ) THEN
         IF ( yukawa > 0._dp) THEN
            div = div + tpiba2/yukawa
@@ -3230,16 +3277,24 @@ MODULE exx
      DO iq=0,  nqq
         q_ = dq * (iq+0.5d0)
         qq = q_ * q_
-        IF ( erfc_scrlen > 0 ) THEN
-           aa = aa  -exp( -alpha * qq) * exp(-qq/4.d0/erfc_scrlen**2) * dq
-        ELSEIF ( erf_scrlen > 0 ) THEN
-           aa = 0._dp
-        ELSE
-           aa = aa - exp( -alpha * qq) * yukawa / (qq + yukawa) * dq
-        ENDIF
+! Debug Zhenfei Liu 9/28/2015
+! this equals: (alpha+beta)*0 - beta*[]
+           aa = aa + beta_in_rsh * &
+                     exp(-alpha*qq)*exp(-qq/4.d0/erfc_scrlen**2) * dq
+!        IF ( erfc_scrlen > 0 ) THEN
+!           aa = aa  -exp( -alpha * qq) * exp(-qq/4.d0/erfc_scrlen**2) * dq
+!        ELSEIF ( erf_scrlen > 0 ) THEN
+!           aa = 0._dp
+!        ELSE
+!           aa = aa - exp( -alpha * qq) * yukawa / (qq + yukawa) * dq
+!        ENDIF
+! DONE Debug.
      ENDDO
      aa = aa * 8.d0 /fpi
-     aa = aa + 1._dp/sqrt(alpha*0.25d0*fpi)
+! Debug Zhenfei Liu 10/8/2015: added exxalfa below
+!     aa = aa + 1._dp/sqrt(alpha*0.25d0*fpi)
+     aa = aa + 1._dp/sqrt(alpha*0.25d0*fpi) * exxalfa
+! DONE Debug.
      IF( erf_scrlen > 0) aa = 1._dp/sqrt((alpha+1._dp/4.d0/erf_scrlen**2)*0.25d0*fpi)
      div = div - e2*omega * aa
 
