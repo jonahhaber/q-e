@@ -5587,7 +5587,7 @@ IMPLICIT NONE
 
 END SUBROUTINE aceupdate_k
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-SUBROUTINE vexxace_k(nnpw,nbnd,phi,exxe,vphi)
+SUBROUTINE vexxace_k(nnpw,nbnd,phi,exxe,exx_bands,vphi)
 USE becmod,               ONLY : calbec
 USE wvfct,                ONLY : current_k, npwx, wg
 USE noncollin_module,     ONLY : npol
@@ -5601,6 +5601,9 @@ IMPLICIT NONE
   COMPLEX(DP) :: phi(npwx*npol,nbnd)
   COMPLEX(DP),OPTIONAL :: vphi(npwx*npol,nbnd)
   COMPLEX(DP),ALLOCATABLE :: cmexx(:,:), vv(:,:)
+! JBH Begin
+  REAL(DP), INTENT(OUT) :: exx_bands(nbnd)
+! JBH
   real*8, PARAMETER :: Zero=0.0d0, One=1.0d0, Two=2.0d0, Pt5=0.50d0
 
   CALL start_clock('vexxace')
@@ -5623,13 +5626,19 @@ IMPLICIT NONE
 
   IF(domat) THEN
 ! JBH : Modify
-     WRITE(stdout, *) 'about to enter matcalc_k'
+     !WRITE(stdout, *) 'Writting exchange to exx.dat'
      CALL matcalc_k('ACE',.true.,0,current_k,npwx*npol,nbnd,nbnd,phi,vv,cmexx,exxe)
+! Write exchange energies to exx_bands
      DO j = 1,nbnd
-         !WRITE(192, '("nbnd: ", I6)') j
-         !WRITE(192, '("exchange_energy: ",F17.8)') DBLE(cmexx(j,j))
-         WRITE( 192, '(I6, I6, F17.8, F17.8)') 1, j, DBLE(cmexx(j,j)) * 13.6056980659, 0.0 
+       exx_bands(j) = DBLE(cmexx(j,j)) * 13.6056980659
      ENDDO
+! Write exchange contributions to output
+     !DO j = 1,nbnd
+     !  WRITE(stdout, '(I6, I6, F17.8, F17.8)') 1, j, DBLE(cmexx(j,j)) * 13.6056980659, 0.0
+     !ENDDO
+     !DO j = 1,nbnd
+     !  WRITE( 192, '(I6, I6, F17.8, F17.8)') 1, j, DBLE(cmexx(j,j)) * 13.6056980659, 0.0 
+     !ENDDO
 ! JBH : Modify
 #if defined(__DEBUG)
     WRITE(stdout,'(3(A,I3),A,I9,A,f12.6)') 'vexxace_k: nbnd=', nbnd, ' nbndproj=',nbndproj, &

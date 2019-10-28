@@ -95,7 +95,7 @@ SUBROUTINE electrons()
   END IF
   IF (dft_is_hybrid() .AND. adapt_thr ) tr2= tr2_init
 ! JBH : Modify
-  OPEN ( unit=192, file="exx.dat" )
+!  OPEN ( unit=192, file="exx.dat" )
 ! JBH
   fock0 = 0.D0
   fock1 = 0.D0
@@ -231,6 +231,10 @@ SUBROUTINE electrons()
         !
         fock0 = fock2
         IF (use_ace) THEN
+! JBH : Modify
+           WRITE(stdout, '(5x,a,I4)') 'Writting exx for iteration : ', iter
+!           WRITE(192, '(a,I4)') 'Writting exx for iteration : ', iter
+! JBH : Modify
            fock2 = exxenergyace()
         ELSE
            fock2 = exxenergy2()
@@ -1313,7 +1317,10 @@ FUNCTION exxenergyace ( )
 ! JBH : Modify
   USE buffers,  ONLY : get_buffer
   USE exx,      ONLY : vexxace_gamma, vexxace_k, domat
-  USE klist,    ONLY : nks, ngk, xk
+! JBH : Modify
+!  USE klist,    ONLY : nks, ngk, xk
+  USE klist,    ONLY : nks, ngk, xk, nkstot
+! JBH : End Modify
   USE wvfct,    ONLY : nbnd, npwx, current_k
   USE lsda_mod, ONLY : lsda, isk, current_spin
   USE io_files, ONLY : iunwfc, nwordwfc
@@ -1328,8 +1335,14 @@ FUNCTION exxenergyace ( )
   REAL (dp) :: exxenergyace  ! computed energy
   !
   REAL (dp) :: ex
+! JBH : Begin
+  REAL(DP) :: exx_band_temp(nbnd)
+  REAL(DP) :: exx_band_nks(nbnd,nks)
+  REAL(DP) :: exx_band_collect(nbnd,nkstot)
+  REAL(DP) :: xk_collect(3,nkstot)
   REAL (dp) :: k_temp(3)
-  INTEGER :: ik, npw, ii
+! JBH : End
+  INTEGER :: ik, npw, ib, ii
   !
   domat = .true.
   exxenergyace=0.0_dp
@@ -1342,18 +1355,26 @@ FUNCTION exxenergyace ( )
         call vexxace_gamma ( npw, nbnd, evc, ex )
      ELSE
 ! JBH : Modify
-        k_temp = xk(1:3,current_k)
-        call cryst_to_cart(1, k_temp, at, -1)
-        WRITE( 192, '(3(F17.8),I6,I6)') (k_temp(ii), ii=1,3), nbnd, 0 
-        !WRITE( 192, '(3(F17.8)),2(I6)') (xk(ii,current_k), ii=1,3), nbnd, 0
-        !WRITE( 192, '(F9.8, 2(IF17.8))') (xk(ik, 1)
-        call vexxace_k ( npw, nbnd, evc, ex )
-        !WRITE( 192, '("Total exchange energy", F17.8)') ex
+        call vexxace_k ( npw, nbnd, evc, ex, exx_band_temp)
+        exx_band_nks(:,ik) = exx_band_temp
 ! JBH : End modify
      END IF
      exxenergyace = exxenergyace + ex
   END DO
   CALL mp_sum( exxenergyace, inter_pool_comm )
+! JBH : Collect eigenergies
+  WRITE( stdout, '(a)') 'Begin writing exx_band.'
+  CALL poolcollect(nbnd, nks, exx_band_nks, nkstot, exx_band_collect)
+  CALL poolcollect(3, nks, xk, nkstot, xk_collect)
+  call cryst_to_cart(nkstot, xk_collect, at, -1)
+  DO ik = 1,nkstot
+    WRITE(stdout, '(3(F16.8),I8)') (xk_collect(ii,ik), ii=1,3), nbnd
+!    WRITE(192, '(3(F12.6))') (xk_collect(ii,ik), ii=1,3)
+    DO ib = 1,nbnd
+      WRITE(stdout, '(I8,I8,F16.8,F16.8)') 1, ib, exx_band_collect(ib,ik), 0.0
+      !WRITE(192, '(I6,I6,F12.6,F8.4)') 1, ib, exx_band_collect(ib,ik) * 13.6056980659, 0.0
+    ENDDO
+  ENDDO
   domat = .false.
   !
 END FUNCTION exxenergyace

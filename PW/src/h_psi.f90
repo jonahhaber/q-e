@@ -99,6 +99,9 @@ SUBROUTINE h_psi_( lda, n, m, psi, hpsi )
   USE fft_base, ONLY : dffts
   USE exx,      ONLY : use_ace, vexx, vexxace_gamma, vexxace_k
   USE funct,    ONLY : exx_is_active
+! JBH
+  USE wvfct,                ONLY : nbnd
+! JBH
   USE fft_helper_subroutines
   !
   IMPLICIT NONE
@@ -106,6 +109,9 @@ SUBROUTINE h_psi_( lda, n, m, psi, hpsi )
   INTEGER, INTENT(IN)     :: lda, n, m
   COMPLEX(DP), INTENT(IN)  :: psi(lda*npol,m) 
   COMPLEX(DP), INTENT(OUT) :: hpsi(lda*npol,m)   
+! JBH
+  REAL(DP) :: exx_band(nbnd)
+! JBH
   !
   INTEGER     :: ipol, ibnd, incr
   REAL(dp)    :: ee
@@ -234,7 +240,7 @@ SUBROUTINE h_psi_( lda, n, m, psi, hpsi )
         IF (gamma_only) THEN
            CALL vexxace_gamma(lda,m,psi,ee,hpsi)
         ELSE
-           CALL vexxace_k(lda,m,psi,ee,hpsi) 
+           CALL vexxace_k(lda,m,psi,ee,exx_band,hpsi) 
         END IF
      ELSE
         CALL vexx( lda, n, m, psi, hpsi, becp )
