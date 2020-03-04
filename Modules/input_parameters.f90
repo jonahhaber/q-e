@@ -621,7 +621,10 @@ MODULE input_parameters
           ! in rhombohedral axes. If .FALSE. in hexagonal axes, that are
           ! converted internally in rhombohedral axes.  
           !
-
+          ! debug GuyO 04Mar2020
+        LOGICAL :: wannier_proj = .FALSE.
+        REAL(DP):: lambda_wann_proj = 0.0_DP
+          ! end debug 
 
         NAMELIST / system / ibrav, celldm, a, b, c, cosab, cosac, cosbc, nat, &
              ntyp, nbnd, ecutwfc, ecutrho, nr1, nr2, nr3, nr1s, nr2s,         &
@@ -655,7 +658,8 @@ MODULE input_parameters
              esm_a, esm_zb, fcp_mu, fcp_mass, fcp_tempw, fcp_relax,           &
              fcp_relax_step, fcp_relax_crit, fcp_mdiis_size, fcp_mdiis_step,  &
              space_group, uniqueb, origin_choice, rhombohedral,               &
-             zgate, relaxz, block, block_1, block_2, block_height
+             zgate, relaxz, block, block_1, block_2, block_height,            &
+             wannier_proj, lambda_wann_proj
 
 !=----------------------------------------------------------------------------=!
 !  ELECTRONS Namelist Input Parameters
