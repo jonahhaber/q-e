@@ -51,7 +51,12 @@ MODULE ldaU
   REAL(DP), ALLOCATABLE :: &
        q_ae(:,:,:),          &! coefficients for projecting onto beta functions
        q_ps(:,:,:)            ! (matrix elements on AE and PS atomic wfcs)
-  !
+  ! debug GuyO 04Mar2020
+  LOGICAL :: &
+       wannier_proj
+  REAL(DP) :: &
+       lambda_wann_proj
+  ! end debug
 CONTAINS
   !
   SUBROUTINE init_lda_plus_u ( psd, noncolin )
