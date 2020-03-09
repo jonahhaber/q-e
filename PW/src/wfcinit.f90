@@ -20,7 +20,10 @@ SUBROUTINE wfcinit()
   USE klist,                ONLY : xk, nks, ngk, igk_k
   USE control_flags,        ONLY : io_level, lscf, twfcollect 
   USE fixed_occ,            ONLY : one_atom_occupations
-  USE ldaU,                 ONLY : lda_plus_u, U_projection, wfcU
+!debug Dahvyd Wing 3/9/2020 setting wfcU for wannier_constraint
+!  USE ldaU,                 ONLY : lda_plus_u, U_projection, wfcU
+  USE ldaU,                 ONLY : lda_plus_u, U_projection, wfcU, nwfcU, wannier_constraint
+!end debug
   USE lsda_mod,             ONLY : lsda, current_spin, isk
   USE io_files,             ONLY : nwordwfc, nwordwfcU, iunhub, iunwfc,&
                                    diropn, tmp_dir, prefix
@@ -109,6 +112,15 @@ SUBROUTINE wfcinit()
      !
   END IF
   !
+  ! debug Dahvyd Wing 3/9/2020 setting wfcU to the top down spin wavefunction
+  !
+  IF (wannier_constraint) THEN
+     WRITE( stdout, '(5X, "Setting wfcU to the highest down-spin wavefunction read from file",/)' )
+     ALLOCATE(wfcU(2*nwordwfc,1))
+     wfcU(:,1) = evc(:,nbnd)
+     nwfcU = 1
+  END IF
+  ! end debug
   ! ... state what will happen
   !
   IF ( TRIM(starting_wfc) == 'file' ) THEN
