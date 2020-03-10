@@ -17,7 +17,10 @@ SUBROUTINE allocate_wfc()
   USE wvfct,     ONLY : npwx, nbnd
   USE basis,     ONLY : natomwfc, swfcatom
   USE fixed_occ, ONLY : one_atom_occupations
-  USE ldaU,      ONLY : wfcU, nwfcU, lda_plus_u, U_projection
+  ! debug Dahvyd Wing 3/9/2020
+  !  USE ldaU,      ONLY : wfcU, nwfcU, lda_plus_u, U_projection
+  USE ldaU,      ONLY : wfcU, nwfcU, lda_plus_u, U_projection, wannier_constraint
+  ! end debug
   USE noncollin_module,     ONLY : noncolin, npol
   USE wavefunctions_module, ONLY : evc
   USE wannier_new, ONLY : use_wannier
@@ -29,7 +32,15 @@ SUBROUTINE allocate_wfc()
   IF ( one_atom_occupations .OR. use_wannier ) &
      ALLOCATE( swfcatom( npwx*npol, natomwfc) )
   IF ( lda_plus_u .AND. (U_projection.NE.'pseudo') ) &
-     ALLOCATE( wfcU(npwx*npol, nwfcU) )
+       ALLOCATE( wfcU(npwx*npol, nwfcU) )
+ 
+  !debug Dahvyd Wing 3/9/2020 trying to find why wfcU has the wrong dimensions
+  IF (wannier_constraint) ALLOCATE(wfcU(npwx,1))
+  WRITE( stdout, '(5X,"allocated wfcU ")' )
+  WRITE( stdout, '(5X,"wfcU dim 1 ", I4)' ) SIZE(wfcU,1)
+  WRITE( stdout, '(5X,"wfcU dim 2 ", I4)' ) SIZE(wfcU,2)
+  !end debug
+
   !
   RETURN
   !
