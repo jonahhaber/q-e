@@ -233,10 +233,11 @@ SUBROUTINE h_psi_( lda, n, m, psi, hpsi )
   !
   ! debug Dahvyd Wing 3/9/2020 add the projector: lambda*|wfcU> <wfcU| psi> to h_psi
   ! this only applies the constraint to the spin down hamiltonian
-  WRITE( stdout, '(5X,"Current spin ", I4)' ) current_spin
+  ! WRITE( stdout, '(5X,"h_psi_ is run ")' )
+  !WRITE( stdout, '(5X,"Current spin ", I4)' ) current_spin
   IF (wannier_constraint .AND. current_spin == 2 ) THEN
      CALL vhpsi_constr(lda, n,m, psi, hpsi)
-     WRITE( stdout, '(5X,"applied wannier constraint")' )
+     !WRITE( stdout, '(5X,"applied wannier constraint")' )
   END IF
   ! end debug
   !

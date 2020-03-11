@@ -24,7 +24,11 @@ SUBROUTINE sum_band()
   USE gvecs,                ONLY : nls, nlsm, doublegrid
   USE klist,                ONLY : nks, nkstot, wk, xk, ngk, igk_k
   USE fixed_occ,            ONLY : one_atom_occupations
-  USE ldaU,                 ONLY : lda_plus_U
+  ! debug Dahvyd Wing 3/11/2020 
+  ! USE ldaU,                 ONLY : lda_plus_U
+  USE ldaU,                 ONLY : lda_plus_U, wannier_constraint
+  USE io_global,            ONLY : stdout
+  ! end debug
   USE lsda_mod,             ONLY : lsda, nspin, current_spin, isk
   USE scf,                  ONLY : rho
   USE symme,                ONLY : sym_rho
@@ -105,6 +109,16 @@ SUBROUTINE sum_band()
      ENDIF
   ENDIF
   !
+  ! debug Dahvyd Wing 3/11/2020 report the occupation of wfcU
+  IF (wannier_constraint) THEN
+     DO ik = 1, nks
+        IF (lsda) current_spin = isk(ik)
+        WRITE( stdout, '(5X,"sum_bands spin =",I4)' ) current_spin
+        CALL get_buffer  (evc, nwordwfc, iunwfc, ik)
+        CALL calc_n_wfcU(ik)
+     END DO
+  END IF
+  ! end debug
   call set_bgrp_indices ( nbnd, ibnd_start, ibnd_end )
   this_bgrp_nbnd = ibnd_end - ibnd_start + 1
   !
@@ -1210,3 +1224,50 @@ CONTAINS
    END FUNCTION same_lj
 
 END SUBROUTINE add_becsum_so
+
+! debug Dahvyd Wing 3/11/2020 
+subroutine calc_n_wfcU (ik)
+  ! report the occupancy of wfcU and
+  ! the projection of wfcU on all wavefuncitons
+  ! this is currently just for verification purposes
+
+  !-----------------------------------------------------------------------
+  USE io_global,            ONLY : stdout
+  USE kinds,     ONLY : DP
+  USE becmod,    ONLY : bec_type, calbec, allocate_bec_type, deallocate_bec_type
+  USE ldaU,      ONLY :  nwfcU, wfcU
+  USE wavefunctions_module, ONLY : evc
+  USE wvfct,                ONLY : nbnd, npwx, wg
+  !
+  implicit none
+  !
+  integer :: ibnd, ik
+  real(DP) :: sum_all_n_wfcU,sum_occ_n_wfcU
+  !
+  type (bec_type) :: proj
+
+  !
+  sum_all_n_wfcU = 0.0
+  sum_occ_n_wfcU = 0.0
+  ! this allocates proj%r(nwfcU,mps)
+  CALL allocate_bec_type ( nwfcU,nbnd, proj )
+!  WRITE( stdout, '(5X,"after allocate_bec_type ")' )
+  CALL calbec (npwx, wfcU, evc, proj)
+  WRITE( stdout, '(5X,"<wfcU|psi> ")' )
+  ! calculate sum_i |<wfcU | psi_i>|^2
+  DO ibnd =1,nbnd
+     WRITE( stdout, '(5X,f6.4)' ) proj%r(1, ibnd)
+     sum_all_n_wfcU = sum_all_n_wfcU + (proj%r(1,ibnd))**2 
+     sum_occ_n_wfcU = sum_occ_n_wfcU + (proj%r(1,ibnd))**2  * wg(ibnd,ik)
+  END DO
+  ! neither of these should be greater than 1, tune lamba_wann_constr to get
+  ! the value of sum_occ_n_wfcU you want.
+  WRITE( stdout, '(5X,"n_wfcU (occupied) =",f6.4)' ) sum_occ_n_wfcU
+  WRITE( stdout, '(5X,"n_wfcU (all) =",f6.4)' ) sum_all_n_wfcU
+  CALL deallocate_bec_type (proj)
+  !
+
+  RETURN
+end subroutine calc_n_wfcU
+
+! end debug

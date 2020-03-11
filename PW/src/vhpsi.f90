@@ -180,12 +180,12 @@ subroutine vhpsi_constr (ldap, np, mps, psip, hpsi)
   !
   ! this allocates proj%r(nwfcU,mps)
   CALL allocate_bec_type ( nwfcU,mps, proj )
-  WRITE( stdout, '(5X,"after allocate_bec_type ")' )
+  ! WRITE( stdout, '(5X,"after allocate_bec_type ")' )
   CALL calbec (np, wfcU, psip, proj)
-  WRITE( stdout, '(5X,"<wfcU|psi> ")' )
-  DO i =1,mps
-       WRITE( stdout, '(5X,f6.4)' ) proj%r(1, i)
-  END DO
+  ! WRITE( stdout, '(5X,"<wfcU|psi> ")' )
+  ! DO i =1,mps
+  !      WRITE( stdout, '(5X,f6.4)' ) proj%r(1, i)
+  ! END DO
   IF  (.NOT. gamma_only) THEN
      !!!!! add warning
   END IF
