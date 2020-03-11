@@ -32,7 +32,10 @@ SUBROUTINE summary()
   USE lsda_mod,        ONLY : lsda, starting_magnetization
   USE ldaU,            ONLY : lda_plus_U, Hubbard_u, Hubbard_j, Hubbard_alpha, &
                               Hubbard_l, lda_plus_u_kind, Hubbard_lmax,&
-                              Hubbard_J0, Hubbard_beta
+                              Hubbard_J0, Hubbard_beta, &
+                              ! debug GuyO 04Mar2020
+                              wannier_constraint, lambda_wann_constr
+                              ! end debug
   USE klist,           ONLY : degauss, smearing, lgauss, ltetra, nkstot, xk, &
                               wk, nelec, nelup, neldw, two_fermi_energies
   USE control_flags,   ONLY : imix, nmix, mixing_beta, nstep, lscf, &
@@ -86,6 +89,13 @@ SUBROUTINE summary()
   IF ( imix ==  2 ) mixing_style = 'local-TF'
   !
   IF ( title /= ' ') WRITE( stdout, "(/,5X,'Title: ',/,5X,A75)" ) title
+  !
+  ! debug GuyO 04Mar2020
+  IF (wannier_constraint) THEN
+     WRITE( stdout, '(5X, "Wannier projections are used",/)')
+     WRITE( stdout, '(5X, "Lambda = ",F12.4,/)' ) lambda_wann_constr
+  END IF
+  ! end debug
   !
   WRITE( stdout, 100) ibrav, alat, omega, nat, ntyp
   IF ( two_fermi_energies ) THEN
