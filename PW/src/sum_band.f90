@@ -1260,7 +1260,7 @@ subroutine calc_n_wfcU (ik)
      WRITE( stdout, '(5X,f6.4)' ) proj%r(1, ibnd)
      sum_all_n_wfcU = sum_all_n_wfcU + (proj%r(1,ibnd))**2 
      sum_occ_n_wfcU = sum_occ_n_wfcU + (proj%r(1,ibnd))**2  * wg(ibnd,ik)
-     eig_wfcU = eig_wfcU +  (proj%r(1,ibnd))**2  * wg(ibnd,ik) * et(ibnd,ik)
+     eig_wfcU = eig_wfcU +  (proj%r(1,ibnd))**2  * et(ibnd,ik)
   END DO
   ! neither of these should be greater than 1, tune lamba_wann_constr to get
   ! the value of sum_occ_n_wfcU you want.
