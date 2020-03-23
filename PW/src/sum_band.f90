@@ -1227,28 +1227,29 @@ END SUBROUTINE add_becsum_so
 
 ! debug Dahvyd Wing 3/11/2020 
 subroutine calc_n_wfcU (ik)
-  ! report the occupancy of wfcU and
+  ! reports the following quantities:
+  ! the occupancy of wfcU
   ! the projection of wfcU on all wavefuncitons
-  ! this is currently just for verification purposes
-
+  ! "the eigenvalue of wfcU" i.e. sum_i |<wfcU| psi_i>|^2 * eig_i = <wfcU| H |wfcU> 
   !-----------------------------------------------------------------------
   USE io_global,            ONLY : stdout
   USE kinds,     ONLY : DP
   USE becmod,    ONLY : bec_type, calbec, allocate_bec_type, deallocate_bec_type
   USE ldaU,      ONLY :  nwfcU, wfcU
   USE wavefunctions_module, ONLY : evc
-  USE wvfct,                ONLY : nbnd, npwx, wg
+  USE wvfct,                ONLY : nbnd, npwx, wg, et
   !
   implicit none
   !
   integer :: ibnd, ik
-  real(DP) :: sum_all_n_wfcU,sum_occ_n_wfcU
+  real(DP) :: sum_all_n_wfcU,sum_occ_n_wfcU, eig_wfcU
   !
   type (bec_type) :: proj
 
   !
   sum_all_n_wfcU = 0.0
   sum_occ_n_wfcU = 0.0
+  eig_wfcU =0.0
   ! this allocates proj%r(nwfcU,mps)
   CALL allocate_bec_type ( nwfcU,nbnd, proj )
 !  WRITE( stdout, '(5X,"after allocate_bec_type ")' )
@@ -1259,6 +1260,7 @@ subroutine calc_n_wfcU (ik)
      WRITE( stdout, '(5X,f6.4)' ) proj%r(1, ibnd)
      sum_all_n_wfcU = sum_all_n_wfcU + (proj%r(1,ibnd))**2 
      sum_occ_n_wfcU = sum_occ_n_wfcU + (proj%r(1,ibnd))**2  * wg(ibnd,ik)
+     eig_wfcU = eig_wfcU +  (proj%r(1,ibnd))**2  * wg(ibnd,ik) * et(ibnd,ik)
   END DO
   ! neither of these should be greater than 1, tune lamba_wann_constr to get
   ! the value of sum_occ_n_wfcU you want.
@@ -1267,6 +1269,8 @@ subroutine calc_n_wfcU (ik)
   CALL deallocate_bec_type (proj)
   !
 
+ 
+  WRITE( stdout, '(5X,"eig_wfcU = ",f10.4)' ) eig_wfcU * 13.605693
   RETURN
 end subroutine calc_n_wfcU
 
