@@ -6,7 +6,6 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 ! hi guy
-! Chan and Ceder = Cheddar!
 !----------------------------------------------------------------------------
 ! TB
 ! included gate related energy
