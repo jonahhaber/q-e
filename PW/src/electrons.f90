@@ -5,7 +5,6 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-! hi guy
 !----------------------------------------------------------------------------
 ! TB
 ! included gate related energy
