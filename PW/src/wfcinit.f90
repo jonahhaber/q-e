@@ -20,8 +20,7 @@ SUBROUTINE wfcinit()
   USE klist,                ONLY : xk, nks, ngk, igk_k
   USE control_flags,        ONLY : io_level, lscf, twfcollect 
   USE fixed_occ,            ONLY : one_atom_occupations
-  !debug Dahvyd Wing 3/9/2020 setting wfcU for wannier_constraint
-  USE kinds,      ONLY : DP
+!debug Dahvyd Wing 3/9/2020 setting wfcU for wannier_constraint
 !  USE ldaU,                 ONLY : lda_plus_u, U_projection, wfcU
   USE ldaU,                 ONLY : lda_plus_u, U_projection, wfcU, nwfcU, wannier_constraint
 !end debug
@@ -45,9 +44,6 @@ SUBROUTINE wfcinit()
   !
   IMPLICIT NONE
   !
-  !debug Dahvyd Wing 3/15/2020
-  COMPLEX(DP), ALLOCATABLE :: temp_wfc(:)
-  !end debug
   INTEGER :: ik, ierr
   LOGICAL :: exst, exst_mem, exst_file, opnd_file, twfcollect_file = .FALSE.
   CHARACTER (LEN=256)                     :: dirname
@@ -119,17 +115,8 @@ SUBROUTINE wfcinit()
   ! debug Dahvyd Wing 3/9/2020 setting wfcU to the top down spin wavefunction
   !
   IF (wannier_constraint) THEN
-     CALL get_buffer( evc, nwordwfc, iunwfc, 1 )
-     ! this stores the HUMO of spin up
-     ALLOCATE(temp_wfc(SIZE(evc,1)))
-     temp_wfc(:) = evc(:,nbnd)
-     CALL get_buffer( evc, nwordwfc, iunwfc, 2 )
      WRITE( stdout, '(5X, "Setting wfcU to the highest down-spin wavefunction read from file",/)' )
      wfcU(:,1) = evc(:,nbnd)
-     ! this replaces the wannier function in the spin down channel with the
-     ! the HUMO of the spin up channel to make the starting guess more realistic
-     evc(:,nbnd) = temp_wfc(:)
-     CALL save_buffer ( evc, nwordwfc, iunwfc, 2 )
      nwfcU = 1
   END IF
   ! end debug
