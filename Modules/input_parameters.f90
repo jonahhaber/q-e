@@ -622,8 +622,8 @@ MODULE input_parameters
           ! converted internally in rhombohedral axes.  
           !
           ! debug GuyO 04Mar2020
-        LOGICAL :: wannier_constraint = .FALSE.
-        REAL(DP):: lambda_wann_constr = 0.0_DP
+        LOGICAL :: wannier_proj = .FALSE.
+        REAL(DP):: lambda_wann_proj = 0.0_DP
           ! end debug 
 
         NAMELIST / system / ibrav, celldm, a, b, c, cosab, cosac, cosbc, nat, &
@@ -659,7 +659,7 @@ MODULE input_parameters
              fcp_relax_step, fcp_relax_crit, fcp_mdiis_size, fcp_mdiis_step,  &
              space_group, uniqueb, origin_choice, rhombohedral,               &
              zgate, relaxz, block, block_1, block_2, block_height,            &
-             wannier_constraint, lambda_wann_constr
+             wannier_proj, lambda_wann_proj
 
 !=----------------------------------------------------------------------------=!
 !  ELECTRONS Namelist Input Parameters

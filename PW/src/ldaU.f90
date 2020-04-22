@@ -53,9 +53,9 @@ MODULE ldaU
        q_ps(:,:,:)            ! (matrix elements on AE and PS atomic wfcs)
   ! debug GuyO 04Mar2020
   LOGICAL :: &
-       wannier_constraint
+       wannier_proj
   REAL(DP) :: &
-       lambda_wann_constr
+       lambda_wann_proj
   ! end debug
 CONTAINS
   !

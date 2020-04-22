@@ -314,8 +314,8 @@ MODULE read_namelists_module
        !
        ! debug GuyO 04Mar2020
        ! Wannier projections
-       wannier_constraint = .FALSE.
-       lambda_wann_constr = 0.0_DP
+       wannier_proj = .FALSE.
+       lambda_wann_proj = 0.0_DP
        ! end debug
        !
        RETURN
@@ -924,8 +924,8 @@ MODULE read_namelists_module
        CALL mp_bcast( block_height,       ionode_id, intra_image_comm )
        !
        ! debug GuyO 04Mar2020
-       CALL mp_bcast( wannier_constraint, ionode_id, intra_image_comm )
-       CALL mp_bcast( lambda_wann_constr, ionode_id, intra_image_comm )
+       CALL mp_bcast( wannier_proj,       ionode_id, intra_image_comm )
+       CALL mp_bcast( lambda_wann_proj,   ionode_id, intra_image_comm )
        ! end debug
        !
        RETURN

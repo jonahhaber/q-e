@@ -124,8 +124,8 @@ SUBROUTINE iosys()
                             lda_plus_u_    => lda_plus_u, &
                             lda_plus_u_kind_    => lda_plus_u_kind, &
                             ! debug GuyO 04Mar2020
-                            wannier_constraint_  =>  wannier_constraint, &
-                            lambda_wann_constr_ => lambda_wann_constr, &
+                            wannier_proj_  =>  wannier_proj, &
+                            lambda_wann_proj_ => lambda_wann_proj, &
                             ! end debug
                             niter_with_fixed_ns, starting_ns, U_projection
   !
@@ -275,7 +275,7 @@ SUBROUTINE iosys()
                                rhombohedral, zgate, relaxz, block, block_1,   &
                                block_2, block_height,                         &
                                ! debug GuyO 04Mar2020
-                               wannier_constraint, lambda_wann_constr
+                               wannier_proj, lambda_wann_proj
                                ! end debug
   !
   ! ... ELECTRONS namelist
@@ -1280,8 +1280,8 @@ SUBROUTINE iosys()
   w_2_              = w_2
   !
   ! debug GuyO 04Mar2020
-  wannier_constraint_     = wannier_constraint
-  lambda_wann_constr_ = lambda_wann_constr 
+  wannier_proj_     = wannier_proj
+  lambda_wann_proj_ = lambda_wann_proj 
   ! end debug
   !
   IF (trim(occupations) /= 'from_input') one_atom_occupations_=.false.
