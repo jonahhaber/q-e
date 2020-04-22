@@ -116,6 +116,7 @@ SUBROUTINE wfcinit()
   !
   IF (wannier_constraint) THEN
      WRITE( stdout, '(5X, "Setting wfcU to the highest down-spin wavefunction read from file",/)' )
+     ALLOCATE(wfcU(2*nwordwfc,1))
      wfcU(:,1) = evc(:,nbnd)
      nwfcU = 1
   END IF

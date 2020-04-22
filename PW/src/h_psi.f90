@@ -87,11 +87,7 @@ SUBROUTINE h_psi_( lda, n, m, psi, hpsi )
   USE scf,      ONLY : vrs  
   USE wvfct,    ONLY : g2kin
   USE uspp,     ONLY : vkb, nkb
-  ! debug Dahvyd Wing 3/9/2020 
-  USE ldaU,     ONLY : lda_plus_u, U_projection, wannier_constraint
-  USE io_global,            ONLY : stdout
-!  USE ldaU,     ONLY : lda_plus_u, U_projection
-  ! end debug
+  USE ldaU,     ONLY : lda_plus_u, U_projection
   USE gvect,    ONLY : gstart
   USE funct,    ONLY : dft_is_meta
   USE control_flags,    ONLY : gamma_only
@@ -230,15 +226,6 @@ SUBROUTINE h_psi_( lda, n, m, psi, hpsi )
      ENDIF
      !
   ENDIF
-  !
-  ! debug Dahvyd Wing 3/9/2020 add the projector: lambda*|wfcU> <wfcU| psi> to h_psi
-  ! this only applies the constraint to the spin down hamiltonian
-  WRITE( stdout, '(5X,"Current spin ", I4)' ) current_spin
-  IF (wannier_constraint .AND. current_spin == 2 ) THEN
-     CALL vhpsi_constr(lda, n,m, psi, hpsi)
-     WRITE( stdout, '(5X,"applied wannier constraint")' )
-  END IF
-  ! end debug
   !
   ! ... Here the exact-exchange term Vxx psi
   !
