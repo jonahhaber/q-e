@@ -42,7 +42,7 @@ FUNCTION set_hubbard_l( psd ) RESULT( hubbard_l )
         !
         hubbard_l =  0
         !
-     CASE( 'C', 'N', 'O' )
+     CASE( 'C', 'N', 'O', 'Si' )
         !
         hubbard_l =  1
         !

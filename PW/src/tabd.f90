@@ -97,7 +97,7 @@ FUNCTION hubbard_occ ( psd )
      !
      ! OTHER ELEMENTS
      !
-     CASE( 'C'  )
+     CASE( 'C', 'Si'  )
         hubbard_occ = 2.d0
      !
      CASE( 'N'  )
