@@ -18,6 +18,9 @@ SUBROUTINE electrons()
   ! ... For non-hybrid functionals it just calls "electron_scf"
   !
   USE kinds,                ONLY : DP
+  ! debug Dahvyd Wing 04/12/2020, for fixing hybrid startingwfc='file'
+  USE basis,                ONLY : starting_wfc
+  ! end debug
   USE check_stop,           ONLY : check_stop_now, stopped_by_user
   USE io_global,            ONLY : stdout, ionode
   USE fft_base,             ONLY : dfftp
@@ -62,6 +65,10 @@ SUBROUTINE electrons()
 ! Debug Zhenfei Liu 10/20/2015
   REAL(DP), EXTERNAL :: get_clock
 ! Debug DONE.
+  !debug Dahvyd wing 04/13/2020 for printing eigenvalues
+  integer :: ibnd
+  REAL(dp)  :: fake_eig
+  ! debug done
   REAL(DP) :: &
       charge,       &! the total charge
       ee, exxen      ! used to compute exchange energy
@@ -140,7 +147,48 @@ SUBROUTINE electrons()
      END IF
      CLOSE ( unit=iunres, status='delete')
   END IF
-  !
+
+  ! debug Dahvyd Wing 04/12/2020
+  IF (dft_is_hybrid() .AND. TRIM(starting_wfc) == 'file') THEN
+     WRITE(stdout,'(5x,"Use hybrid restart hack")')
+     ! give fake eigenvaluse so that sum bands will populate the correct orbitals
+     ! this means that restart isn't perfect for open shell or magnetic systems
+     fake_eig = 0.0d0
+     DO ibnd =1,nbnd
+        et(ibnd,1) = fake_eig
+        et(ibnd,2) = fake_eig
+        fake_eig = fake_eig + 1.0d0
+     END DO
+     CALL sum_band()
+     first = .false.
+     !
+     ! Activate exact exchange, set orbitals used in its calculation,
+     ! then calculate exchange energy (will be useful at next step)
+     !
+     CALL exxinit(DoLoc)
+     IF( DoLoc ) CALL localize_orbitals( )
+     IF (use_ace) THEN
+        CALL aceinit ( )
+        fock2 = exxenergyace()
+     ENDIF
+     exxen = 0.50d0*fock2 
+     !
+     ! calculate potential
+     ! start self-consistency loop on exchange
+     !
+     CALL v_of_rho( rho, rho_core, rhog_core, &
+          ehart, etxc, vtxc, eth, etotefield, charge, v)
+     !
+     etot = etot +  exxen
+     IF (okpaw) CALL PAW_potential(rho%bec, ddd_PAW, epaw,etot_cmp_paw)
+     CALL set_vrs( vrs, vltot, v%of_r, kedtau, v%kin_r, dfftp%nnr, &
+          nspin, doublegrid )
+     WRITE(stdout,'(5x,"Fock energy before SCF loop is entered. Use this to confirm that wavefunctions were read properly")')
+     WRITE( stdout, 9066 ) '%', etot, hwf_energy, dexx
+     ! WRITE( stdout, 9062 ) - fock1
+     WRITE( stdout, 9063 ) 0.5D0*fock2
+  END IF
+  ! end debug
   DO idum=1,niter
      !
      iter = iter + 1
