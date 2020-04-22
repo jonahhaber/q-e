@@ -123,10 +123,6 @@ SUBROUTINE iosys()
                             Hubbard_beta_ => hubbard_beta, &
                             lda_plus_u_    => lda_plus_u, &
                             lda_plus_u_kind_    => lda_plus_u_kind, &
-                            ! debug GuyO 04Mar2020
-                            wannier_proj_  =>  wannier_proj, &
-                            lambda_wann_proj_ => lambda_wann_proj, &
-                            ! end debug
                             niter_with_fixed_ns, starting_ns, U_projection
   !
   USE martyna_tuckerman, ONLY: do_comp_mt
@@ -273,10 +269,7 @@ SUBROUTINE iosys()
                                fcp_mdiis_size, fcp_mdiis_step,                &
                                space_group, uniqueb, origin_choice,           &
                                rhombohedral, zgate, relaxz, block, block_1,   &
-                               block_2, block_height,                         &
-                               ! debug GuyO 04Mar2020
-                               wannier_proj, lambda_wann_proj
-                               ! end debug
+                               block_2, block_height
   !
   ! ... ELECTRONS namelist
   !
@@ -1278,11 +1271,6 @@ SUBROUTINE iosys()
   trust_radius_ini_ = trust_radius_ini
   w_1_              = w_1
   w_2_              = w_2
-  !
-  ! debug GuyO 04Mar2020
-  wannier_proj_     = wannier_proj
-  lambda_wann_proj_ = lambda_wann_proj 
-  ! end debug
   !
   IF (trim(occupations) /= 'from_input') one_atom_occupations_=.false.
   !
